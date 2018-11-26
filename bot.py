@@ -1,5 +1,6 @@
 import random
 import logging
+import sys
 from collections import defaultdict
 from numpy import (
     array as ndarray,
@@ -59,7 +60,7 @@ class Bot(object):
                 self.balances[info[0]] = float(info[1])
 
     
-    def parse_action(self):
+    def parse_action(self, data=None):
         #get ready to trade: call the strategy and do action
         action = self.strategy(self.data)
         self.send_action(action)
@@ -72,8 +73,24 @@ class Bot(object):
             output = action[0] + ' ' + action[1] + ' ' + action[2]
         print output
     
-    def read_input(self):
-        pass
+    def line_handler(self, line):        
+        next_step, data = self.parse_input(line)
+        if next_step == 'settings':
+            method = self.parse_settings
+        elif next_step == 'update':
+            method = self.parse_update
+            data = data[1:]
+        elif next_step == 'action':
+            method = self.parse_action
+        return method, data
+    
+    def loop(self):
+        while True:
+            print 'next line'
+            method, data = self.line_handler(sys.stdin.readline().strip())
+            method(data)
+
+
 
 
 class Strategies(object):
@@ -98,16 +115,9 @@ class Consts(object):
     ACTION = 'action'
     REGISTERED_STRATEGIES = ['custom4params', 'rand']
 
-    # def __init__(self, balance):
-    #     self.balance = balance
 
-    # def buy(self, amount, pair):
-    #     pass
-    
-    # def sell(self, amount, pair):
-    #     pass
-    
-    # def notrade(self):
-    #     pass
+if __name__ == '__main__':
+    bot = Bot()
+    bot.loop()
 
 

@@ -109,6 +109,19 @@ class TestBot(unittest.TestCase):
             self.bot.send_action(('buy', 'USDT_BTC', '0.01'))
             self.assertEqual(output.getvalue().strip(), 'buy USDT_BTC 0.01')
 
+    def test_line_handler(self):
+        #test settings handler
+        method, data = self.bot.line_handler(self.setting_lines[0])
+        self.assertEqual(method, self.bot.parse_settings)
+        self.assertEqual(data, self.setting_lines[0].split()[1:])
+        #test updates handler
+        method, data = self.bot.line_handler(self.update_lines[0])
+        self.assertEqual(method, self.bot.parse_update)
+        self.assertEqual(data, self.update_lines[0].split()[2:])
+        #test action handler
+        method, data = self.bot.line_handler('action order 10000')
+        self.assertEqual(method, self.bot.parse_action)
+        self.assertEqual(data, ['order', '10000'])
 
 if __name__ == '__main__':
     unittest.main()
