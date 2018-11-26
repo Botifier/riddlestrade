@@ -1,3 +1,5 @@
+import random
+import logging
 from collections import defaultdict
 from numpy import (
     array as ndarray,
@@ -6,22 +8,25 @@ from numpy import (
 )
 from functools import partial
 
-
-class InputParser(object):
-    SETTINGS = 'settings'
-    UPDATE = 'update'
-    ACTION = 'action'
+class Bot(object):
     data = defaultdict(lambda: defaultdict(lambda: ndarray([]))) #keep appending pair_info
     balances = {}
+    action = 'pass'
+    logging.basicConfig(level=logging.DEBUG)
+    fees = 0.2/100
+
     '''
     'pair': {
-        price :int,
-        quantity:int
+        volume: ndarray([]),
+        open: ndarray([])
     }
     
     '''
-    def __init__(self):
-        pass
+    def __init__(self, strategy='rand'):
+        if strategy not in Consts.REGISTERED_STRATEGIES:
+            self.strategy = Strategies.rand
+        else:
+            self.strategy = getattr(Strategies, strategy)
 
     def parse_input(self, line):
         lst = line.split()
@@ -54,35 +59,55 @@ class InputParser(object):
                 self.balances[info[0]] = float(info[1])
 
     
-    def parse_action(self, lst):
-        pass
-
-class Strategies(object):    
-    # data = ndarray
-
-    def custom4params(self, data):
-        pass
+    def parse_action(self):
+        #get ready to trade: call the strategy and do action
+        action = self.strategy(self.data)
+        self.send_action(action)
+        return action
     
-    def rand(self):
-        return random.choice(['buy', 'sell', 'pass'])
+    def send_action(self, action):
+        if action[0] == Consts.PASS:
+            output = action[0]
+        else:
+            output = action[0] + ' ' + action[1] + ' ' + action[2]
+        print output
+    
+    def read_input(self):
+        pass
+
+
+class Strategies(object):
+    @staticmethod
+    def custom4params(data):
+        pass
+    @staticmethod
+    def rand(data):
+        res = random.choice([Consts.BUY, Consts.SELL, Consts.PASS])    
+        pair = 'USDT_BTC'
+        amount = 0.01
+        return res, pair, str(amount)
 
 
 
-class Trader(InputParser, Strategies):
+class Consts(object):
     BUY = 'buy'
     SELL = 'sell'
     PASS = 'pass'
+    SETTINGS = 'settings'
+    UPDATE = 'update'
+    ACTION = 'action'
+    REGISTERED_STRATEGIES = ['custom4params', 'rand']
 
-    def __init__(self, balance):
-        self.balance = balance
+    # def __init__(self, balance):
+    #     self.balance = balance
 
-    def buy(self, amount, pair):
-        pass
+    # def buy(self, amount, pair):
+    #     pass
     
-    def sell(self, amount, pair):
-        pass
+    # def sell(self, amount, pair):
+    #     pass
     
-    def notrade(self):
-        pass
+    # def notrade(self):
+    #     pass
 
 
